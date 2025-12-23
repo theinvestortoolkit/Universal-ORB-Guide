@@ -1,10 +1,11 @@
 <!-- Chosen Palette: TradingView Classic (Stone background, Emerald/Rose for price action, Indigo/Amber for levels) -->
-<!-- Application Structure Plan: A 4-phase interactive guide (Identify, Execute, Manage, Context). The flow now supports bidirectional trading (Long/Short) and provides a range-shaded visual legend. Includes the requested Mid-Line Bounce/Rejection logic and a global footer. -->
+<!-- Application Structure Plan: A 5-phase interactive guide (Overview, Identify, Execute, Manage, Context). Includes the requested strategy description and copyright footer. -->
 <!-- Visualization & Content Choices: 
-1. Visual Legend: Line chart with a 'box' annotation (Canvas) to show the Gray Range. 
-2. Strategy Simulator: Direction Toggle (Long/Short) + 4 Entry Types including Mid-Line Bounce.
-3. Risk Calculator: Position sizing based on Stop Loss Width.
-4. Timeframes: Reordered 5m -> 15m -> 30m. 
+1. Strategy Overview: A new summary section explaining the logic.
+2. Visual Legend: Line chart with a 'box' annotation (Canvas) to show the Gray Range. 
+3. Strategy Simulator: Direction Toggle (Long/Short) + 4 Entry Types.
+4. Risk Calculator: Position sizing based on Stop Loss Width.
+5. Timeframes: Reordered 5m -> 15m -> 30m. 
 CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
 
 <!DOCTYPE html>
@@ -42,10 +43,11 @@ CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
     <nav class="bg-white border-b border-stone-200">
         <div class="max-w-6xl mx-auto px-4 sm:px-6">
             <div class="flex space-x-8 overflow-x-auto no-scrollbar">
-                <button onclick="switchTab('visuals')" id="tab-visuals" class="tab-active py-4 px-1 text-sm whitespace-nowrap transition-all cursor-pointer">1. Visual Legend</button>
-                <button onclick="switchTab('strategies')" id="tab-strategies" class="tab-inactive py-4 px-1 text-sm whitespace-nowrap transition-all cursor-pointer">2. Long vs Short</button>
-                <button onclick="switchTab('risk')" id="tab-risk" class="tab-inactive py-4 px-1 text-sm whitespace-nowrap transition-all cursor-pointer">3. Risk Management</button>
-                <button onclick="switchTab('context')" id="tab-context" class="tab-inactive py-4 px-1 text-sm whitespace-nowrap transition-all cursor-pointer">4. Market Context</button>
+                <button onclick="switchTab('overview')" id="tab-overview" class="tab-active py-4 px-1 text-sm whitespace-nowrap transition-all cursor-pointer">1. Strategy Overview</button>
+                <button onclick="switchTab('visuals')" id="tab-visuals" class="tab-inactive py-4 px-1 text-sm whitespace-nowrap transition-all cursor-pointer">2. Visual Legend</button>
+                <button onclick="switchTab('strategies')" id="tab-strategies" class="tab-inactive py-4 px-1 text-sm whitespace-nowrap transition-all cursor-pointer">3. Long vs Short</button>
+                <button onclick="switchTab('risk')" id="tab-risk" class="tab-inactive py-4 px-1 text-sm whitespace-nowrap transition-all cursor-pointer">4. Risk Management</button>
+                <button onclick="switchTab('context')" id="tab-context" class="tab-inactive py-4 px-1 text-sm whitespace-nowrap transition-all cursor-pointer">5. Market Context</button>
             </div>
         </div>
     </nav>
@@ -53,8 +55,59 @@ CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
     <!-- Main Content Area -->
     <main class="flex-grow max-w-6xl mx-auto px-4 sm:px-6 py-8 w-full">
 
-        <!-- SECTION 1: VISUAL LEGEND -->
-        <section id="content-visuals" class="space-y-6">
+        <!-- SECTION 1: STRATEGY OVERVIEW -->
+        <section id="content-overview" class="space-y-8 animate-in fade-in duration-500">
+            <div class="max-w-3xl">
+                <h2 class="text-3xl font-extrabold text-stone-900 tracking-tight">What is the Opening Range Breakout?</h2>
+                <p class="text-lg text-stone-600 mt-4 leading-relaxed">
+                    The <strong>Opening Range Breakout (ORB)</strong> is a high-probability momentum strategy used to capture the "trend of the day." It is based on the principle that the first few minutes of the trading session represent the most intense battle between buyers and sellers.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-stone-200">
+                    <div class="w-10 h-10 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                    </div>
+                    <h3 class="font-bold text-stone-900 mb-2">The Catalyst</h3>
+                    <p class="text-sm text-stone-500 leading-relaxed">Early morning volatility is driven by institutional orders, overnight news, and retail panic. This creates a "range" that acts as a blueprint for the rest of the day.</p>
+                </div>
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-stone-200">
+                    <div class="w-10 h-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    </div>
+                    <h3 class="font-bold text-stone-900 mb-2">The Timeframe</h3>
+                    <p class="text-sm text-stone-500 leading-relaxed">Most traders focus on the first 5, 15, or 30 minutes. Once this period ends, the high and low of that time window become the key "triggers" for a trade.</p>
+                </div>
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-stone-200">
+                    <div class="w-10 h-10 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+                    </div>
+                    <h3 class="font-bold text-stone-900 mb-2">The Objective</h3>
+                    <p class="text-sm text-stone-500 leading-relaxed">We wait for the price to "break out" (Long) or "break down" (Short) from this range. The goal is to ride the momentum until the trend exhausts.</p>
+                </div>
+            </div>
+
+            <div class="bg-stone-900 text-white p-8 rounded-2xl shadow-xl flex flex-col md:flex-row items-center gap-8">
+                <div class="flex-1">
+                    <h4 class="text-emerald-400 font-bold uppercase tracking-widest text-xs mb-2">Core Philosophy</h4>
+                    <h3 class="text-2xl font-bold mb-4 italic">"Don't predict the direction. React to the expansion."</h3>
+                    <p class="text-stone-400 text-sm leading-relaxed">The ORB strategy doesn't care if a stock is "overvalued" or "undervalued." It only cares about where the money is flowing at 9:35 AM or 9:45 AM. By using fixed levels, we remove emotion and trade strictly based on price action.</p>
+                </div>
+                <div class="w-full md:w-64 bg-stone-800 p-4 rounded-xl border border-stone-700">
+                    <p class="text-xs font-mono text-stone-400 mb-2">// QUICK CHECKLIST</p>
+                    <ul class="text-xs space-y-2">
+                        <li class="flex items-center gap-2"><div class="w-1 h-1 bg-emerald-500 rounded-full"></div> Identify the High/Low</li>
+                        <li class="flex items-center gap-2"><div class="w-1 h-1 bg-emerald-500 rounded-full"></div> Wait for a Range Exit</li>
+                        <li class="flex items-center gap-2"><div class="w-1 h-1 bg-emerald-500 rounded-full"></div> Set Stop at Range Mid</li>
+                        <li class="flex items-center gap-2"><div class="w-1 h-1 bg-emerald-500 rounded-full"></div> Target 2:1 RR Ratio</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 2: VISUAL LEGEND -->
+        <section id="content-visuals" class="hidden space-y-6">
             <div class="max-w-3xl">
                 <h2 class="text-2xl font-bold text-stone-900">Understanding the Chart Levels</h2>
                 <p class="text-stone-600 mt-2">The indicator automatically draws levels based on the first few minutes of trading. The area between the High and Low is the <strong>Range (Gray Box)</strong>—think of this as the consolidation zone before the "big move" happens.</p>
@@ -81,7 +134,7 @@ CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
             </div>
         </section>
 
-        <!-- SECTION 2: STRATEGIES -->
+        <!-- SECTION 3: STRATEGIES -->
         <section id="content-strategies" class="hidden space-y-6">
             <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
                 <div class="max-w-2xl">
@@ -109,7 +162,7 @@ CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
                         <span class="text-xs text-stone-500">Wait for price to return and hold the level.</span>
                     </button>
                     <button onclick="setStrategy(3)" id="btn-strat-3" class="strategy-btn w-full text-left p-4 rounded-xl border border-stone-200 bg-white transition-all">
-                        <span class="block font-bold text-stone-900">4. Mid-Line Support</span>
+                        <span class="block font-bold text-stone-900" id="btn-label-mid">4. Mid-Line Support</span>
                         <span class="text-xs text-stone-500">Defense of the 50% equilibrium.</span>
                     </button>
                 </div>
@@ -125,7 +178,7 @@ CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
             </div>
         </section>
 
-        <!-- SECTION 3: RISK -->
+        <!-- SECTION 4: RISK -->
         <section id="content-risk" class="hidden space-y-6">
             <div class="max-w-3xl">
                 <h2 class="text-2xl font-bold text-stone-900">Smart Sizing</h2>
@@ -183,7 +236,7 @@ CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
             </div>
         </section>
 
-        <!-- SECTION 4: CONTEXT -->
+        <!-- SECTION 5: CONTEXT -->
         <section id="content-context" class="hidden space-y-6">
             <div class="max-w-3xl">
                 <h2 class="text-2xl font-bold text-stone-900">Timeframe & Market Setup</h2>
@@ -235,7 +288,10 @@ CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
         function switchTab(id) {
             document.querySelectorAll('button[id^="tab-"]').forEach(b => b.className = 'tab-inactive py-4 px-1 text-sm whitespace-nowrap transition-all cursor-pointer');
             document.getElementById('tab-' + id).className = 'tab-active py-4 px-1 text-sm whitespace-nowrap transition-all cursor-pointer';
-            ['visuals', 'strategies', 'risk', 'context'].forEach(sec => document.getElementById('content-' + sec).classList.toggle('hidden', sec !== id));
+            ['overview', 'visuals', 'strategies', 'risk', 'context'].forEach(sec => {
+                const el = document.getElementById('content-' + sec);
+                if (el) el.classList.toggle('hidden', sec !== id);
+            });
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
@@ -323,9 +379,8 @@ CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
             const borderCol = dir === 'long' ? '#10b981' : '#f43f5e';
             document.getElementById('strat-desc-box').style.borderColor = borderCol;
             
-            // Update mid-line button text based on direction
-            const midBtn = document.getElementById('btn-strat-3').querySelector('.font-bold');
-            midBtn.innerText = dir === 'long' ? '4. Mid-Line Support' : '4. Mid-Line Resistance';
+            // Update button label
+            document.getElementById('btn-label-mid').innerText = dir === 'long' ? '4. Mid-Line Support' : '4. Mid-Line Resistance';
             
             updateStrat();
         }
