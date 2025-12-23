@@ -1,3 +1,12 @@
+<!-- Chosen Palette: TradingView Classic (Stone background, Emerald/Rose for price action, Indigo/Amber for levels) -->
+<!-- Application Structure Plan: A 4-phase interactive guide (Identify, Execute, Manage, Context). The flow now supports bidirectional trading (Long/Short) and provides a range-shaded visual legend. Includes the requested Mid-Line Bounce/Rejection logic and a global footer. -->
+<!-- Visualization & Content Choices: 
+1. Visual Legend: Line chart with a 'box' annotation (Canvas) to show the Gray Range. 
+2. Strategy Simulator: Direction Toggle (Long/Short) + 4 Entry Types including Mid-Line Bounce.
+3. Risk Calculator: Position sizing based on Stop Loss Width.
+4. Timeframes: Reordered 5m -> 15m -> 30m. 
+CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,122 +18,105 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; }
-        .chart-container {
-            position: relative;
-            width: 100%;
-            max-width: 800px;
-            margin-left: auto;
-            margin-right: auto;
-            height: 350px;
-            max-height: 450px;
-        }
-        .tab-active {
-            border-bottom: 2px solid #059669;
-            color: #059669;
-            font-weight: 600;
-        }
-        .tab-inactive {
-            color: #78716c;
-            border-bottom: 2px solid transparent;
-        }
-        .tab-inactive:hover {
-            color: #44403c;
-        }
-        .strategy-btn.active {
-            border-color: #10b981;
-            background-color: #ecfdf5;
-            box-shadow: 0 0 0 2px #10b981;
-        }
+        .chart-container { position: relative; width: 100%; max-width: 850px; margin: auto; height: 380px; }
+        .tab-active { border-bottom: 2px solid #10b981; color: #10b981; font-weight: 700; }
+        .tab-inactive { color: #78716c; border-bottom: 2px solid transparent; }
+        .strategy-btn.active { border-color: #10b981; background-color: #f0fdf4; box-shadow: 0 0 0 2px #10b981; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
     </style>
 </head>
-<body class="bg-stone-50 text-stone-800 antialiased selection:bg-emerald-100 selection:text-emerald-900">
+<body class="bg-stone-50 text-stone-800 antialiased flex flex-col min-h-screen">
 
+    <!-- Header -->
     <header class="bg-white border-b border-stone-200 sticky top-0 z-50">
         <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
             <div class="flex items-center gap-2">
-                <div class="w-8 h-8 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg flex items-center justify-center text-white font-bold text-lg">U</div>
-                <h1 class="text-xl font-bold tracking-tight text-stone-900">Universal ORB <span class="text-stone-500 font-normal hidden sm:inline">| Interactive Strategy Guide</span></h1>
+                <div class="w-8 h-8 bg-emerald-600 rounded flex items-center justify-center text-white font-bold">U</div>
+                <h1 class="text-xl font-bold text-stone-900">Universal ORB <span class="text-stone-400 font-normal">Dashboard</span></h1>
             </div>
-            <div class="text-sm font-medium text-stone-500">v1.0</div>
+            <div class="text-xs bg-stone-100 px-2 py-1 rounded text-stone-500 font-mono">STABLE v1.2</div>
         </div>
     </header>
 
-    <nav class="bg-white border-b border-stone-200 shadow-sm">
-        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex space-x-8 overflow-x-auto no-scrollbar" aria-label="Tabs">
-                <button onclick="switchTab('visuals')" id="tab-visuals" class="tab-active py-4 px-1 text-sm whitespace-nowrap transition-colors cursor-pointer">1. Visual Legend</button>
-                <button onclick="switchTab('strategies')" id="tab-strategies" class="tab-inactive py-4 px-1 text-sm whitespace-nowrap transition-colors cursor-pointer">2. Entry Strategies</button>
-                <button onclick="switchTab('risk')" id="tab-risk" class="tab-inactive py-4 px-1 text-sm whitespace-nowrap transition-colors cursor-pointer">3. Risk & Sizing</button>
-                <button onclick="switchTab('context')" id="tab-context" class="tab-inactive py-4 px-1 text-sm whitespace-nowrap transition-colors cursor-pointer">4. Context & Settings</button>
+    <!-- Navigation -->
+    <nav class="bg-white border-b border-stone-200">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6">
+            <div class="flex space-x-8 overflow-x-auto no-scrollbar">
+                <button onclick="switchTab('visuals')" id="tab-visuals" class="tab-active py-4 px-1 text-sm whitespace-nowrap transition-all cursor-pointer">1. Visual Legend</button>
+                <button onclick="switchTab('strategies')" id="tab-strategies" class="tab-inactive py-4 px-1 text-sm whitespace-nowrap transition-all cursor-pointer">2. Long vs Short</button>
+                <button onclick="switchTab('risk')" id="tab-risk" class="tab-inactive py-4 px-1 text-sm whitespace-nowrap transition-all cursor-pointer">3. Risk Management</button>
+                <button onclick="switchTab('context')" id="tab-context" class="tab-inactive py-4 px-1 text-sm whitespace-nowrap transition-all cursor-pointer">4. Market Context</button>
             </div>
         </div>
     </nav>
 
-    <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 min-h-screen">
+    <!-- Main Content Area -->
+    <main class="flex-grow max-w-6xl mx-auto px-4 sm:px-6 py-8 w-full">
 
-        <section id="content-visuals" class="space-y-8">
+        <!-- SECTION 1: VISUAL LEGEND -->
+        <section id="content-visuals" class="space-y-6">
             <div class="max-w-3xl">
-                <h2 class="text-2xl font-bold text-stone-900 mb-2">Decoding the Chart Visuals</h2>
-                <p class="text-stone-600 leading-relaxed">
-                    This section introduces the core "anchors" of the indicator. Each line represents a major psychological level where institutional supply or demand is expected. Toggle the legend below to learn the significance of each level.
-                </p>
+                <h2 class="text-2xl font-bold text-stone-900">Understanding the Chart Levels</h2>
+                <p class="text-stone-600 mt-2">The indicator automatically draws levels based on the first few minutes of trading. The area between the High and Low is the <strong>Range (Gray Box)</strong>—think of this as the consolidation zone before the "big move" happens.</p>
             </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-stone-200 p-6">
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                <div class="lg:col-span-3 bg-white rounded-xl shadow-sm border border-stone-200 p-6">
                     <div class="chart-container">
                         <canvas id="legendChart"></canvas>
                     </div>
                 </div>
-
                 <div class="space-y-4">
-                    <div class="bg-white rounded-xl shadow-sm border border-stone-200 p-5">
-                        <h3 class="font-semibold text-stone-900 mb-3 border-b border-stone-100 pb-2">Level Explanations</h3>
-                        <div id="legend-details" class="min-h-[100px]">
-                            <p class="text-sm text-stone-500 italic">Select a line from the legend below the chart to see its definition.</p>
+                    <div class="bg-white p-5 rounded-xl border border-stone-200 shadow-sm">
+                        <h3 class="font-bold text-sm text-stone-400 uppercase tracking-widest mb-3">Legend Key</h3>
+                        <div id="legend-text" class="text-sm text-stone-600 space-y-3">
+                            <p>Click the level names below the chart to toggle them. Hover over the price line to see the specific values.</p>
                         </div>
                     </div>
-                    <div class="bg-emerald-50 rounded-xl p-5 border border-emerald-100">
-                        <p class="text-emerald-700 text-sm leading-snug">
-                            <strong>Note:</strong> The Gray Box indicates the "Opening Range." Price action inside this zone is considered noise until a breakout occurs.
-                        </p>
+                    <div class="bg-stone-900 text-white p-5 rounded-xl shadow-lg">
+                        <h4 class="font-bold text-emerald-400 text-sm mb-2">The Gray Box Rule</h4>
+                        <p class="text-xs text-stone-300 leading-relaxed">Price inside the gray box is in "Discovery Mode." We only look for trades once a candle leaves this shaded area.</p>
                     </div>
                 </div>
             </div>
         </section>
 
-        <section id="content-strategies" class="hidden space-y-8">
-            <div class="max-w-3xl">
-                <h2 class="text-2xl font-bold text-stone-900 mb-2">Entry Strategy Playbook</h2>
-                <p class="text-stone-600 leading-relaxed">
-                    There are four primary ways to enter an ORB trade. Select a type to simulate the price movement and see the logic behind the entry.
-                </p>
+        <!-- SECTION 2: STRATEGIES -->
+        <section id="content-strategies" class="hidden space-y-6">
+            <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+                <div class="max-w-2xl">
+                    <h2 class="text-2xl font-bold text-stone-900">Breakouts vs. Breakdowns</h2>
+                    <p class="text-stone-600 mt-1">The ORB strategy is direction-neutral. We react to whichever side the market chooses. Switch directions below to see the different setups.</p>
+                </div>
+                <div class="inline-flex bg-stone-200 p-1 rounded-lg">
+                    <button onclick="setDirection('long')" id="btn-long" class="px-4 py-2 rounded-md text-sm font-bold transition-all bg-white text-emerald-600 shadow-sm">Long (Breakout)</button>
+                    <button onclick="setDirection('short')" id="btn-short" class="px-4 py-2 rounded-md text-sm font-bold transition-all text-stone-600 hover:text-stone-900">Short (Breakdown)</button>
+                </div>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                <div class="lg:col-span-4 flex flex-col space-y-3">
-                    <button onclick="setStrategy(0)" id="btn-strat-0" class="strategy-btn active text-left p-4 rounded-xl border border-stone-200 bg-white transition-all">
-                        <span class="block font-bold text-emerald-600">Type 1: Confirmed Breakout</span>
-                        <span class="text-xs text-stone-500">Wait for candle close. Safest entry.</span>
+                <div class="lg:col-span-4 space-y-3">
+                    <button onclick="setStrategy(0)" id="btn-strat-0" class="strategy-btn active w-full text-left p-4 rounded-xl border border-stone-200 bg-white transition-all">
+                        <span class="block font-bold text-stone-900">1. Standard Close</span>
+                        <span class="text-xs text-stone-500">Wait for candle to close outside the range.</span>
                     </button>
-                    <button onclick="setStrategy(1)" id="btn-strat-1" class="strategy-btn text-left p-4 rounded-xl border border-stone-200 bg-white transition-all">
-                        <span class="block font-bold text-amber-600">Type 2: Aggressive Wick</span>
-                        <span class="text-xs text-stone-500">Enter on touch. High momentum.</span>
+                    <button onclick="setStrategy(1)" id="btn-strat-1" class="strategy-btn w-full text-left p-4 rounded-xl border border-stone-200 bg-white transition-all">
+                        <span class="block font-bold text-stone-900">2. Momentum Wick</span>
+                        <span class="text-xs text-stone-500">Enter immediately on level touch.</span>
                     </button>
-                    <button onclick="setStrategy(2)" id="btn-strat-2" class="strategy-btn text-left p-4 rounded-xl border border-stone-200 bg-white transition-all">
-                        <span class="block font-bold text-blue-600">Type 3: The Retest</span>
-                        <span class="text-xs text-stone-500">Wait for pullback. Best Risk:Reward.</span>
+                    <button onclick="setStrategy(2)" id="btn-strat-2" class="strategy-btn w-full text-left p-4 rounded-xl border border-stone-200 bg-white transition-all">
+                        <span class="block font-bold text-stone-900">3. The Retest</span>
+                        <span class="text-xs text-stone-500">Wait for price to return and hold the level.</span>
                     </button>
-                    <button onclick="setStrategy(3)" id="btn-strat-3" class="strategy-btn text-left p-4 rounded-xl border border-stone-200 bg-white transition-all">
-                        <span class="block font-bold text-purple-600">Type 4: Mid-Line Bounce</span>
-                        <span class="text-xs text-stone-500">Support at equilibrium. Trend defense.</span>
+                    <button onclick="setStrategy(3)" id="btn-strat-3" class="strategy-btn w-full text-left p-4 rounded-xl border border-stone-200 bg-white transition-all">
+                        <span class="block font-bold text-stone-900">4. Mid-Line Support</span>
+                        <span class="text-xs text-stone-500">Defense of the 50% equilibrium.</span>
                     </button>
                 </div>
-
                 <div class="lg:col-span-8 bg-white rounded-xl shadow-sm border border-stone-200 p-6">
-                    <div id="strat-description" class="mb-6 p-4 rounded-lg bg-stone-50 border-l-4 border-stone-300">
-                        <h3 class="font-bold text-stone-900" id="strat-title">Loading...</h3>
-                        <p class="text-sm text-stone-600 mt-1" id="strat-desc"></p>
+                    <div id="strat-desc-box" class="mb-4 p-4 rounded-lg bg-stone-50 border-l-4 border-emerald-500">
+                        <h3 class="font-bold text-stone-900" id="strat-title">Standard Breakout</h3>
+                        <p class="text-sm text-stone-600 mt-1" id="strat-desc">Waiting for a candle to close above/below the range ensures the move has real volume behind it.</p>
                     </div>
                     <div class="chart-container">
                         <canvas id="strategyChart"></canvas>
@@ -133,188 +125,236 @@
             </div>
         </section>
 
-        <section id="content-risk" class="hidden space-y-8">
+        <!-- SECTION 3: RISK -->
+        <section id="content-risk" class="hidden space-y-6">
             <div class="max-w-3xl">
-                <h2 class="text-2xl font-bold text-stone-900 mb-2">Position Sizing & Risk</h2>
-                <p class="text-stone-600 leading-relaxed">
-                    Math is your edge. Use this calculator to determine exactly how many shares to buy so that your loss is capped if the trade fails.
-                </p>
+                <h2 class="text-2xl font-bold text-stone-900">Smart Sizing</h2>
+                <p class="text-stone-600">The most important number isn't your profit target—it's your <strong>Stop Loss Width</strong>.</p>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div class="bg-white rounded-xl shadow-sm border border-stone-200 p-6">
-                    <h3 class="font-bold text-stone-800 mb-6">Calculator</h3>
-                    <div class="space-y-4">
+                <div class="bg-white rounded-xl shadow-sm border border-stone-200 p-8">
+                    <h3 class="font-bold text-stone-800 mb-6 flex items-center gap-2">
+                        <span class="w-2 h-6 bg-emerald-500 rounded"></span> Position Calculator
+                    </h3>
+                    <div class="space-y-5">
                         <div>
-                            <label class="block text-xs font-bold text-stone-500 uppercase tracking-wider mb-1">Account Balance ($)</label>
-                            <input type="number" id="accountSize" value="10000" class="w-full p-3 bg-stone-50 border border-stone-200 rounded-lg outline-none focus:ring-2 focus:ring-emerald-500">
+                            <label class="block text-xs font-bold text-stone-400 uppercase mb-1">Account Balance ($)</label>
+                            <input type="number" id="accSize" value="25000" class="w-full p-3 bg-stone-50 border border-stone-200 rounded-lg outline-none focus:ring-2 focus:ring-emerald-500 font-bold">
                         </div>
                         <div class="grid grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-xs font-bold text-stone-500 uppercase tracking-wider mb-1">Risk %</label>
-                                <input type="number" id="riskPercent" value="1" step="0.1" class="w-full p-3 bg-stone-50 border border-stone-200 rounded-lg outline-none focus:ring-2 focus:ring-emerald-500">
+                                <label class="block text-xs font-bold text-stone-400 uppercase mb-1">Risk per Trade (%)</label>
+                                <input type="number" id="riskP" value="1" step="0.5" class="w-full p-3 bg-stone-50 border border-stone-200 rounded-lg outline-none focus:ring-2 focus:ring-emerald-500">
                             </div>
                             <div>
-                                <label class="block text-xs font-bold text-stone-500 uppercase tracking-wider mb-1">Stop Dist. ($)</label>
-                                <input type="number" id="stopDistance" value="0.50" step="0.01" class="w-full p-3 bg-stone-50 border border-stone-200 rounded-lg outline-none focus:ring-2 focus:ring-emerald-500">
+                                <label class="block text-xs font-bold text-stone-400 uppercase mb-1">Stop Width (Price)</label>
+                                <input type="number" id="stopW" value="0.75" step="0.01" class="w-full p-3 bg-stone-50 border border-stone-200 rounded-lg outline-none focus:ring-2 focus:ring-emerald-500">
+                                <span class="text-[10px] text-stone-400 mt-1 block italic">Distance from Entry to Stop in Dollars.</span>
                             </div>
                         </div>
-                        <div class="pt-6 border-t border-stone-100 flex justify-between items-center">
+                        <div class="pt-6 border-t border-stone-100 flex justify-between items-end">
                             <div>
-                                <p class="text-xs text-stone-400">Cash Risk</p>
-                                <p class="text-2xl font-bold text-rose-600" id="riskAmount">$100.00</p>
+                                <p class="text-xs text-stone-400 font-bold">Cash at Risk</p>
+                                <p class="text-2xl font-bold text-rose-500" id="resRisk">$250.00</p>
                             </div>
                             <div class="text-right">
-                                <p class="text-xs text-stone-400">Position Size</p>
-                                <p class="text-2xl font-bold text-stone-900" id="positionSize">200</p>
+                                <p class="text-xs text-stone-400 font-bold">Shares/Contracts</p>
+                                <p class="text-3xl font-bold text-stone-900" id="resSize">333</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="bg-stone-100 rounded-xl p-6 border border-stone-200 flex flex-col justify-center">
-                    <h4 class="font-bold text-stone-900 mb-4">Exit Rule Priority</h4>
-                    <ul class="space-y-4">
-                        <li class="flex items-start">
-                            <span class="w-6 h-6 bg-emerald-100 text-emerald-600 rounded flex items-center justify-center font-bold text-xs mr-3 mt-0.5">1</span>
-                            <p class="text-sm"><strong>Initial Stop:</strong> Always placed at the Mid-line (Blue) or opposite end (Red/Green).</p>
-                        </li>
-                        <li class="flex items-start">
-                            <span class="w-6 h-6 bg-purple-100 text-purple-600 rounded flex items-center justify-center font-bold text-xs mr-3 mt-0.5">2</span>
-                            <p class="text-sm"><strong>Profit Target:</strong> Exit 50% at Previous Day High (PDH) or Low (PDL).</p>
-                        </li>
-                        <li class="flex items-start">
-                            <span class="w-6 h-6 bg-teal-100 text-teal-600 rounded flex items-center justify-center font-bold text-xs mr-3 mt-0.5">3</span>
-                            <p class="text-sm"><strong>The Runner:</strong> Let the remainder ride to Weekly High (PWH) or market close.</p>
-                        </li>
-                    </ul>
+                <div class="space-y-4">
+                    <div class="bg-white border border-stone-200 p-6 rounded-xl shadow-sm">
+                        <h4 class="font-bold text-stone-900 mb-2">What is "Stop Width"?</h4>
+                        <p class="text-sm text-stone-600 leading-relaxed">It is the difference between your <strong>Entry Price</strong> and your <strong>Stop Price</strong>. <br><br>Example: If you enter a Long at $150.50 and your stop is at the OR Mid ($150.00), your Stop Width is <strong>$0.50</strong>.</p>
+                    </div>
+                    <div class="bg-emerald-50 border border-emerald-100 p-6 rounded-xl">
+                        <h4 class="font-bold text-emerald-900 mb-2">Target Logic</h4>
+                        <ul class="text-sm text-emerald-800 space-y-2">
+                            <li class="flex items-center gap-2">✅ <strong>TP1:</strong> Exit 50% at PDH or PDL.</li>
+                            <li class="flex items-center gap-2">✅ <strong>TP2:</strong> Exit 25% at 2:1 Risk/Reward.</li>
+                            <li class="flex items-center gap-2">✅ <strong>Runner:</strong> Move stop to breakeven.</li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </section>
 
-        <section id="content-context" class="hidden space-y-8">
+        <!-- SECTION 4: CONTEXT -->
+        <section id="content-context" class="hidden space-y-6">
             <div class="max-w-3xl">
-                <h2 class="text-2xl font-bold text-stone-900 mb-2">Timeframes & No-Trade Conditions</h2>
-                <p class="text-stone-600 leading-relaxed">The quality of the ORB signal depends heavily on the timeframe used and the market's current volatility context.</p>
+                <h2 class="text-2xl font-bold text-stone-900">Timeframe & Market Setup</h2>
+                <p class="text-stone-600">The timeframe you choose changes the range width and the reliability of the signal.</p>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="bg-white p-6 rounded-xl border border-stone-200">
-                    <div class="font-bold text-emerald-600 mb-2 uppercase text-xs tracking-widest">Standard</div>
-                    <h4 class="text-lg font-bold mb-2">15-Min Range</h4>
-                    <p class="text-sm text-stone-600">The industry standard. Filters out opening wicks and allows algorithmic "washouts" to complete before establishing direction.</p>
+                <div class="bg-white p-6 rounded-xl border-2 border-emerald-500 shadow-md relative">
+                    <div class="absolute -top-3 left-6 bg-emerald-500 text-white text-[10px] font-bold px-2 py-0.5 rounded">MOST COMMON</div>
+                    <h4 class="text-lg font-bold text-stone-900 mb-2">5-Minute ORB</h4>
+                    <p class="text-sm text-stone-500 mb-4">The Standard Entry.</p>
+                    <p class="text-xs text-stone-600 leading-relaxed">Best for active traders on liquid stocks. Captures the move early, but requires quick reflexes and a tolerance for "whipsaws."</p>
                 </div>
                 <div class="bg-white p-6 rounded-xl border border-stone-200">
-                    <div class="font-bold text-amber-600 mb-2 uppercase text-xs tracking-widest">Aggressive</div>
-                    <h4 class="text-lg font-bold mb-2">5-Min Range</h4>
-                    <p class="text-sm text-stone-600">Best for highly liquid tickers (SPY, TSLA) or Crypto. Fast entry, but requires tighter risk management for fake-outs.</p>
+                    <h4 class="text-lg font-bold text-stone-900 mb-2">15-Minute ORB</h4>
+                    <p class="text-sm text-stone-500 mb-4">The Balanced/Institutional Entry.</p>
+                    <p class="text-xs text-stone-600 leading-relaxed">Filters out the initial "morning wash." Gives institutional algos time to show their hand. Much higher win rate than the 5m.</p>
                 </div>
                 <div class="bg-white p-6 rounded-xl border border-stone-200">
-                    <div class="font-bold text-blue-600 mb-2 uppercase text-xs tracking-widest">Conservative</div>
-                    <h4 class="text-lg font-bold mb-2">30-Min Range</h4>
-                    <p class="text-sm text-stone-600">Highest conviction. If a 30-minute range breaks, the trend often holds for the entire afternoon session.</p>
+                    <h4 class="text-lg font-bold text-stone-900 mb-2">30-Minute ORB</h4>
+                    <p class="text-sm text-stone-500 mb-4">High Conviction Entry.</p>
+                    <p class="text-xs text-stone-600 leading-relaxed">Requires the most patience. If the 30-minute range breaks, it usually signals a trend that will last the entire trading session.</p>
                 </div>
+            </div>
+
+            <div class="bg-rose-50 border border-rose-100 p-6 rounded-xl">
+                <h4 class="font-bold text-rose-900 mb-2">The "No-Go" Condition</h4>
+                <p class="text-sm text-rose-800">If the opening range is already wider than the average daily move (ATR) of the stock, the move is likely exhausted. <strong>Do not trade "Elephant Candles" at the open.</strong></p>
             </div>
         </section>
 
     </main>
 
-    <footer class="bg-stone-900 text-stone-500 py-12 mt-12 border-t border-stone-800 text-center">
-        <p class="text-sm font-medium">Universal ORB Professional Dashboard</p>
-        <p class="text-xs mt-1">Single-Page Interactive Application v1.0</p>
+    <!-- Footer -->
+    <footer class="bg-white border-t border-stone-200 py-8 mt-12">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col items-center">
+            <p class="text-sm text-stone-500 font-medium tracking-tight">
+                &copy; <span id="year"></span> TheInvestorToolkit.com
+            </p>
+            <p class="text-[10px] text-stone-400 mt-2 uppercase tracking-widest">Empowering Traders with Universal Logic</p>
+        </div>
     </footer>
 
     <script>
+        // Update Year
+        document.getElementById('year').textContent = new Date().getFullYear();
+
         // --- Navigation ---
-        function switchTab(tabId) {
-            document.querySelectorAll('button[id^="tab-"]').forEach(btn => {
-                btn.className = 'tab-inactive py-4 px-1 text-sm whitespace-nowrap transition-colors cursor-pointer';
-            });
-            document.getElementById(`tab-${tabId}`).className = 'tab-active py-4 px-1 text-sm whitespace-nowrap transition-colors cursor-pointer';
-            ['visuals', 'strategies', 'risk', 'context'].forEach(id => {
-                document.getElementById(`content-${id}`).classList.toggle('hidden', id !== tabId);
-            });
+        function switchTab(id) {
+            document.querySelectorAll('button[id^="tab-"]').forEach(b => b.className = 'tab-inactive py-4 px-1 text-sm whitespace-nowrap transition-all cursor-pointer');
+            document.getElementById('tab-' + id).className = 'tab-active py-4 px-1 text-sm whitespace-nowrap transition-all cursor-pointer';
+            ['visuals', 'strategies', 'risk', 'context'].forEach(sec => document.getElementById('content-' + sec).classList.toggle('hidden', sec !== id));
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        // --- Visual Legend Chart ---
-        const legendCtx = document.getElementById('legendChart').getContext('2d');
-        const legendInfo = {
-            1: { title: "PDH (Purple)", desc: "Previous Day High. Represents the maximum price from yesterday. A key target for long trades." },
-            2: { title: "OR High (Green)", desc: "Opening Range High. The ceiling of the initial morning volatility. Breaking this triggers bullish momentum." },
-            3: { title: "OR Mid (Blue)", desc: "The Equilibrium. 50% of the opening range. If price stays above this, the bias remains bullish." },
-            4: { title: "OR Low (Red)", desc: "Opening Range Low. The floor of the morning. Breaking below this triggers bearish momentum." }
-        };
-
-        const legendChart = new Chart(legendCtx, {
+        // --- Chart 1: Legend ---
+        const legCtx = document.getElementById('legendChart').getContext('2d');
+        const legendChart = new Chart(legCtx, {
             type: 'line',
             data: {
                 labels: ['9:30', '9:35', '9:40', '9:45', '9:50', '9:55', '10:00'],
                 datasets: [
-                    { label: 'Price', data: [100, 102, 101, 103, 105, 104, 106], borderColor: '#57534e', borderWidth: 2, pointRadius: 0, tension: 0.4 },
-                    { label: 'PDH', data: [108, 108, 108, 108, 108, 108, 108], borderColor: '#9333ea', borderDash: [5,5], pointRadius: 0 },
-                    { label: 'OR High', data: [105, 105, 105, 105, 105, 105, 105], borderColor: '#10b981', pointRadius: 0 },
-                    { label: 'OR Mid', data: [102.5, 102.5, 102.5, 102.5, 102.5, 102.5, 102.5], borderColor: '#3b82f6', pointRadius: 0 },
-                    { label: 'OR Low', data: [100, 100, 100, 100, 100, 100, 100], borderColor: '#f43f5e', pointRadius: 0 }
+                    { label: 'Price', data: [100.2, 101.5, 100.8, 102.5, 104, 103, 105], borderColor: '#57534e', borderWidth: 2, pointRadius: 0, tension: 0.4 },
+                    { label: 'OR High', data: Array(7).fill(103), borderColor: '#10b981', pointRadius: 0 },
+                    { label: 'OR Low', data: Array(7).fill(100.5), borderColor: '#f43f5e', pointRadius: 0 },
+                    { label: 'OR Mid', data: Array(7).fill(101.75), borderColor: '#3b82f6', borderDash: [4,4], pointRadius: 0 }
                 ]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: { position: 'bottom', onClick: (e, legendItem, legend) => {
-                        const index = legendItem.datasetIndex;
-                        const ci = legend.chart;
-                        ci.isDatasetVisible(index) ? ci.hide(index) : ci.show(index);
-                        const detail = legendInfo[index];
-                        if(detail) document.getElementById('legend-details').innerHTML = `<h5 class='font-bold text-stone-800'>${detail.title}</h5><p class='text-sm text-stone-600 mt-1'>${detail.desc}</p>`;
-                    }}
+                    legend: { position: 'bottom' },
+                    tooltip: { mode: 'index', intersect: false }
                 },
-                scales: { y: { display: false }, x: { grid: { display: false } } }
+                scales: { y: { display: true }, x: { grid: { display: false } } }
             }
         });
 
-        // --- Strategy Simulator Chart ---
-        const stratCtx = document.getElementById('strategyChart').getContext('2d');
-        const strategyData = [
-            { title: "Type 1: Confirmed Breakout", desc: "Notice the candle close firmly above the Green line. This confirms that buyers have full control before you enter.", data: [100, 102, 101, 103, 105.5, 107, 108] },
-            { title: "Type 2: Aggressive Wick", desc: "Entry triggered the moment price touches the Green line. Fast, but higher risk of a 'fake-out' wick.", data: [100, 101, 105.1, 105.5, 106, 108, 109] },
-            { title: "Type 3: The Retest", desc: "Price breaks out, then returns to 'test' the Green line. This is the highest conviction entry point.", data: [100, 106, 107, 105.2, 105.1, 108, 110] },
-            { title: "Type 4: Mid-Line Bounce", desc: "Price pulls back deep into the range but finds support at the Blue Mid-line. Defends the 50% fair value.", data: [100, 106, 107, 103, 102.6, 104, 106] }
-        ];
+        // Add Gray Box via custom plugin
+        Chart.register({
+            id: 'grayBox',
+            beforeDraw: (chart) => {
+                if (chart.canvas.id !== 'legendChart') return;
+                const {ctx, chartArea: {left, top, right, bottom}, scales: {x, y}} = chart;
+                const high = y.getPixelForValue(103);
+                const low = y.getPixelForValue(100.5);
+                ctx.save();
+                ctx.fillStyle = 'rgba(120, 113, 108, 0.15)';
+                ctx.fillRect(left, high, right - left, low - high);
+                ctx.restore();
+            }
+        });
 
-        let strategyChart = new Chart(stratCtx, {
+        // --- Chart 2: Strategy Simulator ---
+        let currentDir = 'long';
+        let currentStrat = 0;
+        const stratCtx = document.getElementById('strategyChart').getContext('2d');
+        
+        const stratProfiles = {
+            long: [
+                { title: 'Standard Breakout', desc: 'Wait for a 5m candle close above the green line.', data: [100, 102, 101, 103, 105.5, 108, 110] },
+                { title: 'Momentum Wick', desc: 'Enter as soon as price crosses the green line.', data: [100, 101, 105.2, 105.8, 107, 109, 111] },
+                { title: 'The Retest', desc: 'Price breaks out, pulls back to the high, and holds.', data: [100, 106, 107, 105.1, 105.0, 108, 110] },
+                { title: 'Mid-Line Support (Bounce)', desc: 'Price dips into the range but defends the blue mid-line.', data: [100, 106, 107, 103, 102.6, 105, 108] }
+            ],
+            short: [
+                { title: 'Standard Breakdown', desc: 'Wait for a 5m candle close below the red line.', data: [105, 103, 104, 102, 99.5, 97, 95] },
+                { title: 'Momentum Wick', desc: 'Enter as soon as price crosses the red line.', data: [105, 104, 100.1, 99.5, 98, 96, 94] },
+                { title: 'The Retest', desc: 'Price breaks down, rallies back to the low, and fails.', data: [105, 99, 98, 100.2, 100.5, 97, 95] },
+                { title: 'Mid-Line Resistance (Reject)', desc: 'Price rallies into the range but hits a ceiling at the blue mid-line.', data: [105, 99, 98, 101.5, 102.2, 99, 96] }
+            ]
+        };
+
+        const strategyChart = new Chart(stratCtx, {
             type: 'line',
             data: {
                 labels: ['1', '2', '3', '4', '5', '6', '7'],
                 datasets: [
-                    { label: 'Price', data: strategyData[0].data, borderColor: '#57534e', tension: 0.3, pointRadius: 3 },
+                    { label: 'Price', data: stratProfiles.long[0].data, borderColor: '#57534e', pointRadius: 4, tension: 0.3 },
                     { label: 'OR High', data: Array(7).fill(105), borderColor: '#10b981', pointRadius: 0 },
+                    { label: 'OR Low', data: Array(7).fill(100), borderColor: '#f43f5e', pointRadius: 0 },
                     { label: 'OR Mid', data: Array(7).fill(102.5), borderColor: '#3b82f6', borderDash: [4,4], pointRadius: 0 }
                 ]
             },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } }
+            }
         });
 
+        function setDirection(dir) {
+            currentDir = dir;
+            document.getElementById('btn-long').className = dir === 'long' ? 'px-4 py-2 rounded-md text-sm font-bold transition-all bg-white text-emerald-600 shadow-sm' : 'px-4 py-2 rounded-md text-sm font-bold transition-all text-stone-600 hover:text-stone-900';
+            document.getElementById('btn-short').className = dir === 'short' ? 'px-4 py-2 rounded-md text-sm font-bold transition-all bg-white text-rose-600 shadow-sm' : 'px-4 py-2 rounded-md text-sm font-bold transition-all text-stone-600 hover:text-stone-900';
+            const borderCol = dir === 'long' ? '#10b981' : '#f43f5e';
+            document.getElementById('strat-desc-box').style.borderColor = borderCol;
+            
+            // Update mid-line button text based on direction
+            const midBtn = document.getElementById('btn-strat-3').querySelector('.font-bold');
+            midBtn.innerText = dir === 'long' ? '4. Mid-Line Support' : '4. Mid-Line Resistance';
+            
+            updateStrat();
+        }
+
         function setStrategy(idx) {
+            currentStrat = idx;
             document.querySelectorAll('.strategy-btn').forEach((b, i) => b.classList.toggle('active', i === idx));
-            document.getElementById('strat-title').innerText = strategyData[idx].title;
-            document.getElementById('strat-desc').innerText = strategyData[idx].desc;
-            strategyChart.data.datasets[0].data = strategyData[idx].data;
+            updateStrat();
+        }
+
+        function updateStrat() {
+            const profile = stratProfiles[currentDir][currentStrat];
+            document.getElementById('strat-title').innerText = profile.title;
+            document.getElementById('strat-desc').innerText = profile.desc;
+            strategyChart.data.datasets[0].data = profile.data;
             strategyChart.update();
         }
-        setStrategy(0);
 
-        // --- Calculator ---
-        function calc() {
-            const acc = parseFloat(document.getElementById('accountSize').value) || 0;
-            const riskP = parseFloat(document.getElementById('riskPercent').value) || 0;
-            const dist = parseFloat(document.getElementById('stopDistance').value) || 0;
-            const riskAmt = acc * (riskP / 100);
-            document.getElementById('riskAmount').innerText = `$${riskAmt.toFixed(2)}`;
-            document.getElementById('positionSize').innerText = dist > 0 ? Math.floor(riskAmt / dist).toLocaleString() : 0;
+        // --- Calc ---
+        function runCalc() {
+            const acc = parseFloat(document.getElementById('accSize').value) || 0;
+            const risk = parseFloat(document.getElementById('riskP').value) || 0;
+            const width = parseFloat(document.getElementById('stopW').value) || 0;
+            const cashRisk = acc * (risk / 100);
+            document.getElementById('resRisk').innerText = '$' + cashRisk.toFixed(2);
+            document.getElementById('resSize').innerText = width > 0 ? Math.floor(cashRisk / width).toLocaleString() : 0;
         }
-        ['accountSize', 'riskPercent', 'stopDistance'].forEach(id => document.getElementById(id).addEventListener('input', calc));
-        calc();
+        ['accSize', 'riskP', 'stopW'].forEach(id => document.getElementById(id).addEventListener('input', runCalc));
+        runCalc();
     </script>
 </body>
 </html>
